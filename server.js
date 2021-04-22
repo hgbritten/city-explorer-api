@@ -71,24 +71,24 @@ async function getMoviesHandler(request, response) {
   const movieResponse = await superagent.get(url);
 
   const movieObject = JSON.parse(movieResponse.text);
-  console.log(movieObject);
+  // console.log(movieObject);
   const movieArray = movieObject.results;
-  console.log(movieArray);
+  // console.log(movieArray);
 
-  const popMovies = movieArray.map(day => new Movies(day));
+  const popMovies = movieArray.map(movie => new Movies(movie));
 
   response.send(popMovies);
 }
 
 class Movies {
-  constructor(day) {
-    this.title = day.title;
-    this.popularity = day.popularity;
-    this.overview = day.overview;
-    this.average_votes = day.average_votes;
-    this.total_votes = day.total_votes;
-    this.image_url = day.image_url;
-    this.released_on = day.released_on;
+  constructor(movie) {
+    this.title = movie.title;
+    this.popularity = movie.popularity;
+    this.overview = movie.overview;
+    this.average_votes = movie.average_votes;
+    this.total_votes = movie.total_votes;
+    this.image = movie.poster_path;
+    this.released_on = movie.released_on;
   }
 }
 
