@@ -3,22 +3,40 @@
 const superagent = require('superagent');
 require('dotenv').config();
 
+const inMemoryDB = {};
+
 async function getMoviesHandler(request, response) {
-  console.log('made it to movies');
+
   const cityName = request.query.cityName;
 
-  const key = process.env.MOVIE_API_KEY;
+  try {
 
-  const url = `https://api.themoviedb.org/3/search/movie?query=${cityName}&api_key=${key}`
-  const movieResponse = await superagent.get(url);
+    const movieAlreadyFound = inMemoryDB[cityName] !== undefined
+    if (movieAlreadyFound && (Date.now() - inMemoryDB[cityName].timestamp < 3600000)) {
+      const popMovies = inMemoryDB[cityName].popMovies;
+      // console.log('movie success', inMemoryDB)
+      response.status(200).send(popMovies);
 
-  const movieObject = JSON.parse(movieResponse.text);
+    } else {
 
-  const movieArray = movieObject.results;
+      const key = process.env.MOVIE_API_KEY;
 
-  const popMovies = movieArray.map(movie => new Movies(movie));
+      const url = `https://api.themoviedb.org/3/search/movie?query=${cityName}&api_key=${key}`
+      const movieResponse = await superagent.get(url);
 
-  response.send(popMovies);
+      const movieObject = JSON.parse(movieResponse.text);
+
+      const movieArray = movieObject.results;
+
+      const popMovies = movieArray.map(movie => new Movies(movie));
+      inMemoryDB[cityName] = { popMovies, timestamp: Date.now() };
+      console.log('reset movies');
+      response.send(popMovies);
+    }
+  } catch (err) {
+    console.error('error', err);
+    response.status(500).send('error', err);
+  }
 }
 
 class Movies {
